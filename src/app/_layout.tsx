@@ -7,7 +7,7 @@ const RootLayout = () => {
     <Stack.Screen name='index' />
     <Stack.Screen name='(tabs)' />
     <Stack.Screen name='components' />
-    {/* <Stack.Screen name='screens' /> */}
+    <Stack.Screen name='screens' />
   </Stack>
 }
 

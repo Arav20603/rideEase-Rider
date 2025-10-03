@@ -5,14 +5,16 @@ interface RideCardProps {
   title: string;
   pickup: string;
   drop: string;
+  price: number;
   onAccept: () => void;
   onReject: () => void;
 }
 
-const RideCard: React.FC<RideCardProps> = ({ title, pickup, drop, onAccept, onReject }) => {
+const RideCard: React.FC<RideCardProps> = ({ title, pickup, drop, price, onAccept, onReject }) => {
   return (
     <View style={styles.rideCard}>
       <Text style={styles.rideTitle}>{title}</Text>
+      <Text style={styles.rideFare}>₹{price}</Text>
       <Text style={styles.rideInfo}>Pickup: {pickup}</Text>
       <Text style={styles.rideInfo}>Drop: {drop}</Text>
 
@@ -44,6 +46,7 @@ const styles = StyleSheet.create({
   },
   rideTitle: { fontSize: 16, fontWeight: "700", color: "#222", marginBottom: 6 },
   rideInfo: { fontSize: 14, color: "#555", marginBottom: 4 },
+  rideFare: { fontSize: 20, color: 'green', fontWeight: '700', position: 'absolute', right: 20, top: 20 },
   btnRow: { flexDirection: "row", marginTop: 12, justifyContent: "space-between" },
   btn: { flex: 1, paddingVertical: 10, borderRadius: 12, alignItems: "center", marginHorizontal: 4 },
   accept: { backgroundColor: "#4CAF50" },
