@@ -1,0 +1,4 @@
+export const backendURL = 'http://192.168.31.248:4000/ride/rider'
+// export const backendURL = 'http://10.115.176.159:4000/ride/rider'
+// export const backendURL = 'http://10.0.2.15:4000/ride/rider'
+// export const backendURL = 'http://localhost:4000/ride/rider'
