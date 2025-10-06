@@ -18,6 +18,11 @@
         "backgroundImage": "./src/assets/images/bike.jpg",
         "monochromeImage": "./src/assets/images/bike.jpg"
       },
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBVuu_nVQ1WuEGf3rUur15LKBzz5o_OgP0"
+        }
+      },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
