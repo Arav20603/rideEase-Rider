@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   mapContainer: {
-    flex: 0.8, // remaining space
+    flex: 0.8,
     width: '100%',
     height: '100%'
   },

@@ -10,8 +10,9 @@ import NoRideCard from "../components/noRideCard";
 import QuickActions from "../components/quickActions";
 import { socket } from "@/utils/socket";
 import { useRouter } from "expo-router";
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setRideDetails } from '@/features/riderSlice/riderSlice'
+import { selectOrigin } from "@/features/mapSlice/mapSlice";
 
 
 const Home = () => {
@@ -20,6 +21,7 @@ const Home = () => {
   const [ride, setRide] = useState<any>(null);
   const router = useRouter()
   const dispatch = useDispatch()
+  const riderLocation = useSelector(selectOrigin)
 
   useEffect(() => {
     // dispatch(setRideDetails({
@@ -110,11 +112,12 @@ const Home = () => {
 
 
   const handleAccept = () => {
+    console.log('ride sent via socket')
     socket.emit('ride_accept', {
-      msg: "ride accepted",
-      riderId: rider._id,
-      riderName: rider.name,
-      rideId: ride?.id,
+      riderDetails: {
+        rider,
+        riderLocation
+      }
     })
     dispatch(setRideDetails({
       user: ride.user,
@@ -123,6 +126,7 @@ const Home = () => {
       fare: ride.fare,
       ride: ride.ride
     }))
+    socket.off('ride_accept')
     router.push('/screens/confirmedBooking')
   };
 
