@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Dimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import io from "socket.io-client";
@@ -13,7 +13,7 @@ import { useRouter } from "expo-router";
 import { useDispatch, useSelector } from 'react-redux'
 import { setRideDetails } from '@/features/riderSlice/riderSlice'
 import { selectOrigin } from "@/features/mapSlice/mapSlice";
-
+import ShareOtp from "../components/shareOtp";
 
 const Home = () => {
   const [rider, setRider] = useState<any>(null);
@@ -23,34 +23,6 @@ const Home = () => {
   const dispatch = useDispatch()
   const riderLocation = useSelector(selectOrigin)
 
-  useEffect(() => {
-    // dispatch(setRideDetails({
-    //   user: {
-    //     name: 'Aravind',
-    //     email: 'aravind@gmail.com',
-    //     phone: '8088276220'
-    //   },
-    //   origin: {
-    //     location: { lat: 12.9931407, lng: 77.749486 },
-    //     description: '193, Bengaluru'
-    //   },
-    //   destination: {
-    //     location: { lat: 12.9379593, lng: 77.6999365 },
-    //     description: 'Kadubeesanahalli Road, Kaverappa Layout, Kadubeesanahalli, Panathur, Bengaluru, Karnataka, India'
-    //   },
-    //   fare: 150,
-    //   ride: {
-    //     id: 'bike',
-    //     title: 'Bike',
-    //     baseFare: 30,
-    //     pricePerKm: 10,
-    //     image: 26,
-    //     badge: 'Fastest'
-    //   },
-    // }))
-    // router.push('/screens/confirmedBooking')
-  }, [dispatch, ride])
-
 
   useEffect(() => {
     const fetchRider = async () => {
@@ -69,26 +41,7 @@ const Home = () => {
       }
     };
     fetchRider();
-  }, []);
-
-  useEffect(() => {
-    const fetchRider = async () => {
-      try {
-        const email = await AsyncStorage.getItem("rider");
-        if (!email) return;
-        const res = await axios.post(`${backendURL}/get-rider`, { email });
-        if (res.data.success) {
-          setRider(res.data.user);
-          // Optionally register rider with socket
-          // socket.emit("register_rider", { riderId: res.data.user._id, name: res.data.user.name });
-        }
-      } catch (err) {
-        console.log("❌ Rider fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRider();
+    console.log(Math.floor(1000 + Math.random() * 9000))
   }, []);
 
   // separate effect that runs whenever rider changes
@@ -111,24 +64,60 @@ const Home = () => {
   }, [rider]);
 
 
-  const handleAccept = () => {
-    console.log('ride sent via socket')
-    socket.emit('ride_accept', {
-      riderDetails: {
-        rider,
-        riderLocation
-      }
-    })
+
+  const handleAccept = async () => {
+    if (!ride || !rider) return;
+    const otp = Math.floor(1000 + Math.random() * 9000)
     dispatch(setRideDetails({
       user: ride.user,
       origin: ride.origin,
       destination: ride.destination,
       fare: ride.fare,
-      ride: ride.ride
-    }))
-    socket.off('ride_accept')
-    router.push('/screens/confirmedBooking')
+      ride: ride.ride,
+      otp: otp
+    }));
+    try {
+      const payload = {
+        userId: ride.user._id,
+        riderId: rider._id,
+        pickup: { address: ride.origin.description, lat: ride.origin.location.lat, lng: ride.origin.location.lng },
+        destination: { address: ride.destination.description, lat: ride.destination.location.lat, lng: ride.destination.location.lng },
+        fare: ride.fare,
+        rideOtp: otp
+      };
+
+      const res = await axios.post(`http://192.168.31.248:4000/ride/rides/create`, payload);
+      if (res.data.success) {
+        console.log("✅ Ride created:");
+        socket.emit("ride_accept", {
+          riderDetails: {
+            rider: {
+              name: rider.name,
+              email: rider.email,
+              phone: rider.phone,
+              type: rider.vehicle.type,
+              plate: rider.vehicle.plateNumber
+            },
+            riderLocation: {
+              lat: riderLocation?.location?.lat,
+              lng: riderLocation?.location?.lng,
+              desc: riderLocation?.description
+            },
+            rideOtp: otp
+            // ride: data.ride
+          }
+        });
+
+        router.push("/screens/confirmedBooking");
+      } else {
+        return console.error('Ride create error');
+
+      }
+    } catch (error) {
+      console.error("❌ Ride creation error:", error);
+    }
   };
+
 
   const handleReject = () => {
     try {
@@ -183,4 +172,5 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 20 },
   sectionTitle: { fontSize: 18, fontWeight: "600", color: "#333", marginBottom: 12 },
   loader: { flex: 1, justifyContent: "center", alignItems: "center" },
+  // map: { width: Dimensions.get('window').width, height: Dimensions.get('window').height }
 });

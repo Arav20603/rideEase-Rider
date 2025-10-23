@@ -1,83 +1,134 @@
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native'
-import React, { useEffect } from 'react'
-import { useSelector } from 'react-redux'
-import { RootState } from '@/features/store'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Ionicons } from '@expo/vector-icons'
-import RiderMap from './riderMap'
+import { StyleSheet, Text, View, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/features/store';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import RiderMap from './riderMap';
+import { router } from 'expo-router';
+import { socket } from '@/utils/socket';
+import { Toast } from 'toastify-react-native';
 
 const ConfirmedBooking = () => {
-  const ride = useSelector((state: RootState) => state.ride)
+  const ride = useSelector((state: RootState) => state.ride);
 
   useEffect(() => {
-    console.log(ride)
+    socket.on('user_cancelled_ride', (msg) => {
+      if (msg) {
+        Toast.show({ text1: 'User cancelled ride', type: 'error', visibilityTime: 2000 })
+        router.push('/home')
+      }
+    })
   }, [])
+
+  const handleReachedPickup = () => router.push('/components/shareOtp');
+  const handleCancelRide = () => {
+    Alert.alert('Cancel ride', 'Do u want to cancel the ride?', [
+      {
+        text: 'No', style: 'cancel'
+      },
+      {
+        text: 'Cancel', style: 'destructive', onPress: () => {
+          socket.emit('rider_cancelled_ride', { msg: 'rider cancelled ride' })
+          router.push('/home')
+        }
+      }
+    ])
+  };
+  const handleCallUser = () => console.log('Calling User...');
+  const handleCallRider = () => console.log('Calling Rider...');
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top info panel */}
+      {/* Top Info Panel */}
       <View style={styles.infoContainer}>
-        {/* Pickup section */}
+        {/* Pickup */}
         <View style={styles.locationBox}>
-          <Ionicons name='location' size={22} color='#007bff' />
+          <Ionicons name='location-sharp' size={24} color='#007bff' />
           <View>
             <Text style={styles.label}>Pickup Location</Text>
             <Text style={styles.value}>{ride.origin?.description || '—'}</Text>
           </View>
         </View>
 
-        {/* Divider */}
         <View style={styles.divider} />
 
-        {/* Rider info section */}
+        {/* User & Rider Info */}
         <View style={styles.userContainer}>
+          {/* User */}
           <View style={styles.leftBox}>
-            <Ionicons name='person-circle' size={42} color='#28a745' />
+            <Ionicons name='person-circle-outline' size={50} color='#28a745' />
             <View style={styles.innerBox}>
               <Text style={styles.userName}>{ride.user?.name || 'User Name'}</Text>
-              <Text style={styles.userPhone}>{ride.user?.phone || '+91 ————'}</Text>
+              <TouchableOpacity onPress={handleCallUser} style={styles.smallCallButton}>
+                <Ionicons name='call' size={18} color='#fff' />
+              </TouchableOpacity>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.callButton}>
-            <Ionicons name='call' size={26} color='white' />
-          </TouchableOpacity>
+          {/* Rider */}
+          <View style={styles.leftBox}>
+            <Ionicons name='person-circle' size={50} color='#007bff' />
+            <View style={styles.innerBox}>
+              <Text style={styles.userName}>{ride.user?.name || 'Rider Name'}</Text>
+              <TouchableOpacity onPress={handleCallRider} style={styles.smallCallButtonRider}>
+                <Ionicons name='call' size={18} color='#fff' />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </View>
 
-      {/* Map area placeholder */}
+      {/* Map Area */}
       <View style={styles.mapContainer}>
-       
         <RiderMap />
       </View>
-    </SafeAreaView>
-  )
-}
 
-export default ConfirmedBooking
+      {/* Floating Action Buttons */}
+      <View style={styles.floatingButtons}>
+        <TouchableOpacity
+          style={[styles.fabButton, { backgroundColor: '#28a745' }]}
+          onPress={handleReachedPickup}
+        >
+          <Text style={styles.fabText}>Reached Pickup</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.fabButton, { backgroundColor: '#dc3545' }]}
+          onPress={handleCancelRide}
+        >
+          <Text style={styles.fabText}>Cancel Ride</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  );
+};
+
+export default ConfirmedBooking;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff'
+    backgroundColor: '#f8fafc',
   },
   infoContainer: {
-    flex: 0.18,
-    backgroundColor: '#f8f9fa',
+    flex: 0.22,
+    backgroundColor: '#ffffff',
     borderBottomLeftRadius: 25,
     borderBottomRightRadius: 25,
     paddingHorizontal: 20,
-    paddingTop: 10,
-    elevation: 5,
+    paddingVertical: 15,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
   },
   locationBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    marginVertical: 5,
+    gap: 12,
+    marginBottom: 10,
   },
   label: {
     fontSize: 14,
@@ -107,22 +158,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   userName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
+    color: '#222',
   },
-  userPhone: {
-    fontSize: 14,
-    color: '#495057',
+  smallCallButton: {
+    marginTop: 4,
+    backgroundColor: '#28a745',
+    padding: 6,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
   },
-  callButton: {
+  smallCallButtonRider: {
+    marginTop: 4,
     backgroundColor: '#007bff',
-    padding: 12,
-    borderRadius: 50,
-    elevation: 3,
+    padding: 6,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 32,
+    height: 32,
   },
   mapContainer: {
-    flex: 0.8,
+    flex: 0.78,
     width: '100%',
-    height: '100%'
+    height: '100%',
   },
-})
+  floatingButtons: {
+    position: 'absolute',
+    bottom: 25,
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: 20,
+  },
+  fabButton: {
+    flex: 1,
+    marginHorizontal: 5,
+    paddingVertical: 14,
+    borderRadius: 30,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

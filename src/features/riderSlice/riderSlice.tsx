@@ -28,7 +28,8 @@ export interface RideProps {
   fare: number | 0,
   destination: LocationState | null
   user: UserState | null,
-  ride: RideState | null
+  ride: RideState | null,
+  otp: string | null
 }
 
 const initialState: RideProps = {
@@ -36,7 +37,8 @@ const initialState: RideProps = {
   fare: 0,
   destination: null,
   user: null,
-  ride: null
+  ride: null,
+  otp: null
 }
 
 export const riderSlice = createSlice({
@@ -49,6 +51,7 @@ export const riderSlice = createSlice({
       state.destination = action.payload.destination
       state.fare = action.payload.fare
       state.ride = action.payload.ride
+      state.otp = action.payload.otp
     }
   }
 })

@@ -1,18 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Image, Platform } from 'react-native';
-import MapView, { Marker, LatLng, PROVIDER_GOOGLE } from 'react-native-maps';
-import MapViewDirections from 'react-native-maps-directions';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native'
+import React, { useEffect, useRef, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { RootState } from '@/features/store'
+import MapView, { LatLng, Marker, PROVIDER_GOOGLE } from 'react-native-maps'
+import MapViewDirections from 'react-native-maps-directions'
+import { GOOGLE_MAPS_API_KEY } from '@/constants/apiUrl'
+import { selectOrigin, setOrigin } from '@/features/mapSlice/mapSlice'
 import * as Location from 'expo-location';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '@/features/store';
-import { GOOGLE_MAPS_API_KEY } from '@/constants/apiUrl';
-import { selectOrigin, setOrigin } from '@/features/mapSlice/mapSlice';
-import { socket } from '@/utils/socket';
 
-const RideMap = () => {
+const RideStartedMap = () => {
+  const ride = useSelector((state: RootState) => state.ride)
+  const origin = useSelector(selectOrigin)
   const mapRef = useRef<MapView | null>(null);
-  const ride = useSelector((state: RootState) => state.ride);
-  const origin = useSelector(selectOrigin);
   const dispatch = useDispatch();
 
   const vehicleIcons: Record<string, any> = {
@@ -28,12 +27,11 @@ const RideMap = () => {
     longitude: origin?.location?.lng || 0,
   });
 
-  const userCoords: LatLng = {
+  const destCoords: LatLng = {
     latitude: ride.origin?.location?.lat || 0,
     longitude: ride.origin?.location?.lng || 0,
   };
 
-  // Watch rider location
   useEffect(() => {
     let subscriber: Location.LocationSubscription;
     const startWatching = async () => {
@@ -62,14 +60,6 @@ const RideMap = () => {
               description: origin?.description || 'Rider Location',
             })
           );
-          console.log(newCoords)
-          socket.emit('rider_location', {
-            location: {
-              lat: newCoords?.latitude,
-              lng: newCoords?.longitude
-            }
-          })
-          // socket.off('rider_location')
         }
       );
     };
@@ -84,12 +74,13 @@ const RideMap = () => {
   // Fit map to markers on load
   useEffect(() => {
     setTimeout(() => {
-      mapRef.current?.fitToSuppliedMarkers(['rider', 'user'], {
+      mapRef.current?.fitToSuppliedMarkers(['rider'], {
         edgePadding: { top: 70, right: 70, bottom: 70, left: 70 },
         animated: true,
       });
     }, 500);
   }, [ride.origin, ride.destination]);
+
 
   return (
     <MapView
@@ -97,8 +88,8 @@ const RideMap = () => {
       provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
       style={styles.map}
       initialRegion={{
-        latitude: riderCoords.latitude,
-        longitude: riderCoords.longitude,
+        latitude: origin?.location?.lat || 0,
+        longitude: origin?.location?.lng || 0,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       }}
@@ -117,12 +108,12 @@ const RideMap = () => {
         />
       </Marker>
 
-      {/* User marker */}
+      {/* Drop location */}
       <Marker
-        identifier="user"
-        coordinate={userCoords}
-        title="Pickup"
-        description={ride.origin?.description || 'User Location'}
+        identifier="drop"
+        coordinate={destCoords}
+        title="Drop"
+        description={ride.origin?.description || 'Drop Location'}
       >
         <Image
           source={require('@/assets/icons/destination.png')}
@@ -134,16 +125,23 @@ const RideMap = () => {
       {/* Path from rider to user */}
       <MapViewDirections
         origin={riderCoords}
-        destination={userCoords}
+        destination={{
+          latitude: ride.destination?.location?.lat || 0,
+          longitude: ride.destination?.location?.lng || 0
+        }}
         apikey={GOOGLE_MAPS_API_KEY}
         strokeWidth={4}
         strokeColor="#00008B"
       />
-    </MapView>
-  );
-};
 
-export default RideMap;
+      <View>
+        <Text>Reached destination</Text>
+      </View>
+    </MapView>
+  )
+}
+
+export default RideStartedMap
 
 const styles = StyleSheet.create({
   map: {
@@ -159,4 +157,4 @@ const styles = StyleSheet.create({
     width: 35,
     height: 35,
   },
-});
+})
