@@ -24,6 +24,7 @@ type RideState = {
 }
 
 export interface RideProps {
+  _id?: string | null,
   origin:LocationState | null
   fare: number | 0,
   destination: LocationState | null
@@ -33,6 +34,7 @@ export interface RideProps {
 }
 
 const initialState: RideProps = {
+  _id: null,
   origin: null,
   fare: 0,
   destination: null,
@@ -52,6 +54,7 @@ export const riderSlice = createSlice({
       state.fare = action.payload.fare
       state.ride = action.payload.ride
       state.otp = action.payload.otp
+      state._id = action.payload._id
     }
   }
 })

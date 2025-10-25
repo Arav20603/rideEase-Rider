@@ -28,8 +28,8 @@ const RideStartedMap = () => {
   });
 
   const destCoords: LatLng = {
-    latitude: ride.origin?.location?.lat || 0,
-    longitude: ride.origin?.location?.lng || 0,
+    latitude: ride.destination?.location?.lat || 0,
+    longitude: ride.destination?.location?.lng || 0,
   };
 
   useEffect(() => {
@@ -133,10 +133,6 @@ const RideStartedMap = () => {
         strokeWidth={4}
         strokeColor="#00008B"
       />
-
-      <View>
-        <Text>Reached destination</Text>
-      </View>
     </MapView>
   )
 }

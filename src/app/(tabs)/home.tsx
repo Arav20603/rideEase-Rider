@@ -49,7 +49,7 @@ const Home = () => {
     const listener = (rideData: any) => {
       console.log("🚖 New ride received:", rideData);
 
-      if (rider && rideData.ride.id === rider.vehicle?.type) {
+      if (rider && rideData.ride.id.toLowerCase() === rider.vehicle?.type.toLowerCase()) {
         setRide(rideData);
       } else {
         console.log("❌ Ride type mismatch, ignoring");
@@ -67,28 +67,42 @@ const Home = () => {
 
   const handleAccept = async () => {
     if (!ride || !rider) return;
-    const otp = Math.floor(1000 + Math.random() * 9000)
-    dispatch(setRideDetails({
-      user: ride.user,
-      origin: ride.origin,
-      destination: ride.destination,
-      fare: ride.fare,
-      ride: ride.ride,
-      otp: otp
-    }));
+    const otp = Math.floor(1000 + Math.random() * 9000);
+
     try {
       const payload = {
         userId: ride.user._id,
         riderId: rider._id,
-        pickup: { address: ride.origin.description, lat: ride.origin.location.lat, lng: ride.origin.location.lng },
-        destination: { address: ride.destination.description, lat: ride.destination.location.lat, lng: ride.destination.location.lng },
+        pickup: {
+          address: ride.origin.description,
+          lat: ride.origin.location.lat,
+          lng: ride.origin.location.lng
+        },
+        destination: {
+          address: ride.destination.description,
+          lat: ride.destination.location.lat,
+          lng: ride.destination.location.lng
+        },
         fare: ride.fare,
         rideOtp: otp
       };
 
       const res = await axios.post(`http://192.168.31.248:4000/ride/rides/create`, payload);
+
       if (res.data.success) {
-        console.log("✅ Ride created:");
+        console.log("✅ Ride created:", res.data.ride);
+        console.log(res.data.ride._id)
+
+        dispatch(setRideDetails({
+          user: ride.user,
+          origin: ride.origin,
+          destination: ride.destination,
+          fare: ride.fare,
+          ride: ride.ride,
+          otp: otp,
+          _id: res.data.ride._id
+        }));
+
         socket.emit("ride_accept", {
           riderDetails: {
             rider: {
@@ -104,15 +118,14 @@ const Home = () => {
               desc: riderLocation?.description
             },
             rideOtp: otp
-            // ride: data.ride
           }
         });
 
         router.push("/screens/confirmedBooking");
       } else {
-        return console.error('Ride create error');
-
+        console.error('Ride create error');
       }
+
     } catch (error) {
       console.error("❌ Ride creation error:", error);
     }
