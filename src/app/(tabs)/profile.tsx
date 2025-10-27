@@ -22,7 +22,7 @@ const { width } = Dimensions.get("window");
 
 // Map vehicle type to image
 const vehicleImages: Record<string, any> = {
-  car: require("@/assets/icons/taxi.png"),
+  car: require("@/assets/icons/car.png"),
   bike: require("@/assets/icons/bike.png"),
   auto: require("@/assets/icons/auto.png"),
 };

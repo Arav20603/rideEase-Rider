@@ -61,7 +61,7 @@ const handleKeyPress = (e: any, index: number) => {
       socket.emit('ride_start', { msg: 'ride started' });
       router.push('/screens/rideStarted');
     } else {
-      Toast.show({ text1: 'Enter valid OTP', type: 'error' });
+      Toast.error('Invalid OTP');
     }
   };
 

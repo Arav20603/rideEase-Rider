@@ -47,9 +47,9 @@ const Home = () => {
   // separate effect that runs whenever rider changes
   useEffect(() => {
     const listener = (rideData: any) => {
-      console.log("🚖 New ride received:", rideData);
+      console.log("🚖 New ride received:", rideData.ride.id.toLowerCase());
 
-      if (rider && rideData.ride.id.toLowerCase() === rider.vehicle?.type.toLowerCase()) {
+      if (rider && rideData.ride.id === rider.vehicle?.type.toLowerCase()) {
         setRide(rideData);
       } else {
         console.log("❌ Ride type mismatch, ignoring");

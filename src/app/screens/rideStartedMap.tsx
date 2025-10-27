@@ -16,7 +16,7 @@ const RideStartedMap = () => {
 
   const vehicleIcons: Record<string, any> = {
     bike: require('@/assets/icons/bike.png'),
-    taxi: require('@/assets/icons/taxi.png'),
+    car: require('@/assets/icons/car.png'),
     auto: require('@/assets/icons/auto.png'),
   }
 
